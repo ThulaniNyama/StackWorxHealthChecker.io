@@ -1,0 +1,14 @@
+version: "3"
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2019-GA-ubuntu-16.04
+    ports:
+      - 1433:1433
+    environment:
+      - SA_PASSWORD=Strong_!_Password
+      - ACCEPT_EULA="Y"
+    volumes:
+      - ./dumps:/dumps
+      - db-mssql:/var/opt/mssql
+volumes:
+  db-mssql:
