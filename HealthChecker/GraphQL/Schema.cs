@@ -28,8 +28,7 @@ namespace HealthChecker.GraphQL
 
             Field<StringGraphType>(
                 "status",
-                // TODO: replace with health check code
-                resolve: context => "OFFLINE"
+                resolve: context => HealthStatus.Healthy.ToString()
             );
         }
     }

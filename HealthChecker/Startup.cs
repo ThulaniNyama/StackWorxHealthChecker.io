@@ -35,13 +35,11 @@ namespace HealthChecker
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            /*services.AddDbContext<HealthCheckContext>(options =>
-                options.UseSqlite("Data Source=HealthChecks"));*/
             services.AddHealthChecks()
-                .AddCheck("hello", () =>
-                    HealthCheckResult.Healthy("world"), tags: new[] { "foo_tag" })
-                .AddCheck("id",  () =>
-                    HealthCheckResult.Degraded("BAR is NOK!"), tags: new[] { "bar_tag" })
+                .AddCheck("Id", () =>
+                    HealthCheckResult.Healthy("Id"), tags: new[] { "Id_tag" })
+                .AddCheck("name",  () =>
+                    HealthCheckResult.Degraded("name"), tags: new[] { "name_tag" })
                 .AddCheck("ping", () =>
                 {
                     try

@@ -5,10 +5,11 @@
     <ApplicationIcon></ApplicationIcon>
     <Authors>StackWorx &amp; Thulani Nyama</Authors>
     <PackageTags>ASP.Net, Health Checker, IHttpClientFactory, GraphQL, StackWorx, Thulani Nyama</PackageTags>
-    <NeutralLanguage>fo</NeutralLanguage>
+    <NeutralLanguage>en-ZA</NeutralLanguage>
     <Copyright>StackWorx</Copyright>
     <Company>StackWorx</Company>
     <SignAssembly>false</SignAssembly>
+    <StartupObject>HealthChecker.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +17,10 @@
     <PackageReference Include="GraphQL.Server.Transports.AspNetCore" Version="3.5.0-alpha0046" />
     <PackageReference Include="GraphQL.Server.Ui.Playground" Version="3.5.0-alpha0046" />
     <PackageReference Include="HotChocolate.AspNetCore" Version="11.2.2" />
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.6">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.1.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.5" />
@@ -24,6 +29,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.5" />
+    <PackageReference Include="Ninject" Version="3.3.4" />
   </ItemGroup>
 
   <ItemGroup>
