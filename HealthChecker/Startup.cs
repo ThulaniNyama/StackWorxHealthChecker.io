@@ -1,19 +1,22 @@
+using System;
+using System.Net.NetworkInformation;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using GraphQL.Server;
-using GraphQL.Server.Ui.Playground;
 using HealthChecker.GraphQL;
 using GraphQL.Types;
 using GraphQL.Server.Transports.AspNetCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using GraphQL.Server.Transports.AspNetCore.Common;
-using System.Threading.Tasks;
-using System.Threading;
-using System;
+using GraphQL.Server.Ui.Playground;
 
 namespace HealthChecker
 {
@@ -29,20 +32,61 @@ namespace HealthChecker
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddHealthChecks()
+                .AddCheck("hello", () =>
+                    HealthCheckResult.Healthy("world"), tags: new[] { "foo_tag" })
+                .AddCheck("Bar", () =>
+                    HealthCheckResult.Degraded("BAR is NOK!"), tags: new[] { "bar_tag" })
+                .AddCheck("ping", () =>
+                {
+                    try
+                    {
+                        using (var ping = new Ping())
+                        {
+                            var reply = ping.Send("localhost");
+                            if (reply.Status != IPStatus.Success)
+                            {
+                                return HealthCheckResult.Unhealthy();
+                            }
+
+                            if (reply.RoundtripTime > 100)
+                            {
+                                return HealthCheckResult.Degraded();
+                            }
+
+                            return HealthCheckResult.Healthy();
+                        }
+                    }
+                    catch
+                    {
+                        return HealthCheckResult.Unhealthy();
+                    }
+                })
+                .AddCheck<HealthCheck>("Checker", null, new[] { "Checker" });
+
+            services.AddControllersWithViews();
+
             services.AddRazorPages();
 
             services.AddSingleton<ServerType>();
 
             services.AddSingleton<HealthCheckerSchema, HealthCheckerSchema>();
 
-            services.AddGraphQL(options =>
+            /*services.AddGraphQL(options =>
             {
                 options.EnableMetrics = true;
                 options.ExposeExceptions = true;
-                //var logger = provider.GetRequiredService<ILogger<Startup>>();
-                //options.UnhandledExceptionDelegate = ctx => logger.LogError("{Error} occured", ctx.OriginalException.Message);
-            }).AddSystemTextJson(deserializerSettings => { }, serializerSettings => { });
+                var logger = provider.GetRequiredService<ILogger<Startup>>();
+                options.UnhandledExceptionDelegate = ctx => logger.LogError("{Error} occured", ctx.OriginalException.Message);
+            }).AddSystemTextJson(deserializerSettings => { }, serializerSettings => { });*/
+            //.AddUserContextBuilder()
 
+            services.AddHsts(options =>
+            {
+                options.Preload = true;
+                options.IncludeSubDomains = true;
+                options.MaxAge = TimeSpan.FromDays(365);
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -54,11 +98,10 @@ namespace HealthChecker
             }
             else
             {
-                app.UseExceptionHandler("/Error");
+                app.UseExceptionHandler("/Home/Error");
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
-
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
@@ -70,11 +113,15 @@ namespace HealthChecker
 
             app.UseRouting();
 
-            // app.UseAuthorization();
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapRazorPages();
+                endpoints.MapControllerRoute(
+                    name: "default",
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+                endpoints.MapHealthChecks("/health");
             });
         }
     }
@@ -114,6 +161,21 @@ namespace HealthChecker
             // custom CancellationToken example 
             var cts = CancellationTokenSource.CreateLinkedTokenSource(base.GetCancellationToken(context), new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);
             return cts.Token;
+        }
+    }
+    public class HealthCheck : IHealthCheck
+    {
+        public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context,CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var healthCheckResultHealthy = true;
+
+            if (healthCheckResultHealthy)
+            {
+                return Task.FromResult(
+                    HealthCheckResult.Healthy("A healthy result."));
+            }
+            return Task.FromResult(
+                HealthCheckResult.Unhealthy("An unhealthy result."));
         }
     }
 }
