@@ -79,10 +79,10 @@ namespace HealthChecker
             {
                 options.EnableMetrics = true;
                 options.ExposeExceptions = true;
-                var logger = provider.GetRequiredService<ILogger<Startup>>();
-                options.UnhandledExceptionDelegate = ctx => logger.LogError("{Error} occured", ctx.OriginalException.Message);
-            }).AddSystemTextJson(deserializerSettings => { }, serializerSettings => { })
-              .AddNewtonsoftJson(deserializerSettings => { }, serializerSettings => { })
+                //var logger = provider.GetRequiredService<ILogger<Startup>>();
+                //options.UnhandledExceptionDelegate = ctx => logger.LogError("{Error} occured", ctx.OriginalException.Message);
+            })//.AddSystemTextJson(deserializerSettings => { }, serializerSettings => { })
+              //.AddNewtonsoftJson(deserializerSettings => { }, serializerSettings => { })
               .AddGraphTypes(typeof(Schema));
 
             services.AddHsts(options =>
