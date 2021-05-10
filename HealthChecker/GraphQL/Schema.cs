@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using GraphQL;
 using GraphQL.Types;
+using GraphQL.Utilities;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace HealthChecker.GraphQL
 {
@@ -56,7 +58,6 @@ namespace HealthChecker.GraphQL
         {
             Name = "Query";
 
-
             Func<ResolveFieldContext, string, object> serverResolver = (context, id) => this.servers;
 
             FieldDelegate<ListGraphType<ServerType>>(
@@ -66,19 +67,25 @@ namespace HealthChecker.GraphQL
                 ),
                 resolve: serverResolver
             );
-
             Field<StringGraphType>(
-                "hello",
-                resolve: context => "world"
+                "name",
+                resolve: context => Name
+            );
+            Field<StringGraphType>(
+                "status",
+                resolve: context => HealthStatus.Healthy.ToString()
             );
         }
     }
 
-    public class HealthCheckerSchema : Schema
+    public class HealthCheckerSchema : Schema, ISchema
     {
         public HealthCheckerSchema(IServiceProvider provider) : base(provider)
         {
-            Query = new HealthCheckerQuery();
+            {
+                Query = provider.GetRequiredService<HealthCheckerQuery>();
+                //Query = new HealthCheckerQuery();
+            }
         }
     }
 }

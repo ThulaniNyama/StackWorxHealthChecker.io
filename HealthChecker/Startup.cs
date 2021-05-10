@@ -17,6 +17,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using GraphQL.Server.Transports.AspNetCore.Common;
 using GraphQL.Server.Ui.Playground;
+using Microsoft.EntityFrameworkCore;
+using GraphQL.Utilities;
+using Microsoft.Extensions.Options;
 
 namespace HealthChecker
 {
@@ -32,10 +35,12 @@ namespace HealthChecker
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            /*services.AddDbContext<HealthCheckContext>(options =>
+                options.UseSqlite("Data Source=HealthChecks"));*/
             services.AddHealthChecks()
                 .AddCheck("hello", () =>
                     HealthCheckResult.Healthy("world"), tags: new[] { "foo_tag" })
-                .AddCheck("Bar", () =>
+                .AddCheck("id",  () =>
                     HealthCheckResult.Degraded("BAR is NOK!"), tags: new[] { "bar_tag" })
                 .AddCheck("ping", () =>
                 {
@@ -49,7 +54,7 @@ namespace HealthChecker
                                 return HealthCheckResult.Unhealthy();
                             }
 
-                            if (reply.RoundtripTime > 100)
+                            if (reply.RoundtripTime > 499999)
                             {
                                 return HealthCheckResult.Degraded();
                             }
@@ -70,16 +75,17 @@ namespace HealthChecker
 
             services.AddSingleton<ServerType>();
 
-            services.AddSingleton<HealthCheckerSchema, HealthCheckerSchema>();
+            services.AddSingleton<HealthCheckerSchema>();
 
-            /*services.AddGraphQL(options =>
+            services.AddGraphQL(options =>
             {
                 options.EnableMetrics = true;
                 options.ExposeExceptions = true;
                 var logger = provider.GetRequiredService<ILogger<Startup>>();
                 options.UnhandledExceptionDelegate = ctx => logger.LogError("{Error} occured", ctx.OriginalException.Message);
-            }).AddSystemTextJson(deserializerSettings => { }, serializerSettings => { });*/
-            //.AddUserContextBuilder()
+            }).AddSystemTextJson(deserializerSettings => { }, serializerSettings => { })
+              .AddNewtonsoftJson(deserializerSettings => { }, serializerSettings => { })
+              .AddGraphTypes(typeof(Schema));
 
             services.AddHsts(options =>
             {
@@ -122,6 +128,8 @@ namespace HealthChecker
                     pattern: "{controller=Home}/{action=Index}/{id?}");
 
                 endpoints.MapHealthChecks("/health");
+
+                endpoints.MapGraphQL("/graphql");
             });
         }
     }
@@ -158,8 +166,8 @@ namespace HealthChecker
 
         protected override CancellationToken GetCancellationToken(HttpContext context)
         {
-            // custom CancellationToken example 
-            var cts = CancellationTokenSource.CreateLinkedTokenSource(base.GetCancellationToken(context), new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);
+            // custom CancellationToken
+            var cts = CancellationTokenSource.CreateLinkedTokenSource(base.GetCancellationToken(context), new CancellationTokenSource(TimeSpan.FromMinutes(5)).Token);
             return cts.Token;
         }
     }
